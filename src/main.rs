@@ -1,45 +1,15 @@
+mod opts;
+
 use clap::Parser;
+use rcli::{process_csv, Opts, SubCommand};
 
-#[derive(Debug, Parser)]
-#[command(name = "rcli", version, author = "maniacHanz")]
-struct Opts {
-    #[command(subcommand)]
-    cmd: SubCommand,
-}
-
-#[derive(Debug, Parser)]
-enum SubCommand {
-    #[command(name = "csv", about = "Show csv, or convert csv to other formats")]
-    Csv(CsvOpts),
-}
-
-#[derive(Debug, Parser)]
-struct CsvOpts {
-    #[arg(short, long, value_parser = verify_input_file)]
-    input: String,
-
-    #[arg(short, long, default_value = "output.json")] // "output.json".into()
-    output: String,
-
-    #[arg(short, long, default_value_t = ',')] // '' is char, "" is str
-    delimiter: char,
-
-    #[arg(long, default_value_t = true)]
-    header: bool,
-}
-
-fn main() {
+fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
-    println!("{:?}", opts);
-}
-
-fn verify_input_file(filename: &str) -> Result<String, String> {
-    // import module
-    if std::path::Path::new(filename).exists() {
-        Ok(filename.into())
-    } else {
-        Err(format!("Input file '{}' does not exist.", filename))
+    match opts.cmd {
+        SubCommand::Csv(opts) => process_csv(&opts.input, &opts.output)?,
     }
+
+    Ok(())
 }
 
 #[cfg(test)]
